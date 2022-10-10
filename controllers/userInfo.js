@@ -93,7 +93,7 @@ class userInfo{
       );
 
       if(pwd){
-        var token = jwt.sign({ id: email }, config.secret, {
+        var token = jwt.sign({ email: email, tid: existedUser.TID, uid: existedUser.UID }, config.secret, {
           expiresIn: 86400 // 24 hours
         });
         res.json({

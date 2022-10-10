@@ -13,7 +13,9 @@ validateToken = (req, res, next) => {
       if (err) {
         return res.status(401).send({ message: "Unauthorized!" });
       }
-      req.email = decoded.id;
+      req.headers.email = decoded.email;
+      req.headers.tid = decoded.tid;
+      req.headers.uid = decoded.uid;
       next();
     });
   };
