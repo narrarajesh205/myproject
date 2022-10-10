@@ -4,7 +4,6 @@ const config = require('../config');
 
 validateToken = (req, res, next) => {
     let token = req.headers["Authorization"] || req.headers["authorization"];
-    console.log({token});
   
     if (!token) {
       return res.status(403).send({ message: "Token missing in the request" });
