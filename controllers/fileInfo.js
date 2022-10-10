@@ -10,29 +10,29 @@ class fileInfo{
 
         let currentFolderID = 0;
         if(!req.files){
-            res.json( { messge: "File Not Exist in the Request" } );
+            res.json( { message: "File Not Exist in the Request" } );
             return;
         }
 
         if((folderid || foldername) && req.files.length > 1){
-            res.json( { messge: "One folder must contain only one file max" } );
+            res.json( { message: "One folder must contain only one file max" } );
             return;
         }
 
         if(!uid){
-            res.status(400).json( { message: "User ID missing in the request"} );
+            res.json( { message: "User ID missing in the request"} );
             return;
         }
 
         if(!tid){
-            res.status(400).json( { message: "Tenant ID missing in the request"} );
+            res.json( { message: "Tenant ID missing in the request"} );
             return;
         }
 
         if(folderid){
             let filesInFolder = await FileModel.getFilesCountInFolder(tid, uid, folderid);
             if(filesInFolder >= 1){
-                res.json( { messge: "One folder must contain only one file max" } );
+                res.json( { message: "One folder must contain only one file max" } );
                 return;
             }
             currentFolderID = folderid;
@@ -51,7 +51,7 @@ class fileInfo{
         if(foldername) {
             let folderExist = await FolderModel.checkFolderExistOrNot(foldername, uid);
             if(folderExist){
-                res.json( { errors: { message: "Folder already exist"} } );
+                res.json( { message: "Folder already exist"} );
                 return;
             }
             let folderObject = {
@@ -78,7 +78,7 @@ class fileInfo{
             //Check already this file exist in DB or not
             let fileExist = await FileModel.checkFileExistOrNot(fileNames, currentFolderID, uid);
             if(fileExist){
-                res.json( { errors: { message: "File already exist"} } );
+                res.json( { message: "File already exist" } );
                 return;
             }
         }
@@ -106,12 +106,12 @@ class fileInfo{
         let { uid, tid } = req.headers;
         try{
             if(!uid){
-                res.status(400).json( { message: "User ID missing in the request"} );
+                res.json( { message: "User ID missing in the request"} );
                 return;
             }
     
             if(!tid){
-                res.status(400).json( { message: "Tenant ID missing in the request"} );
+                res.json( { message: "Tenant ID missing in the request"} );
                 return;
             }
 
@@ -132,17 +132,17 @@ class fileInfo{
         let folderID = req.body.fldrID;
         try{
             if(!uid){
-                res.status(400).json( { message: "User ID missing in the request"} );
+                res.json( { message: "User ID missing in the request"} );
                 return;
             }
     
             if(!tid){
-                res.status(400).json( { message: "Tenant ID missing in the request"} );
+                res.json( { message: "Tenant ID missing in the request"} );
                 return;
             }
 
             if(!folderID){
-                res.status(400).json( { message: "Folder ID missing in the request"} );
+                res.json( { message: "Folder ID missing in the request"} );
                 return;
             }
             let folderData = {};
@@ -162,29 +162,29 @@ class fileInfo{
             let destinationFolderID = req.body.destinationFolderID;
     
             if(!uid){
-                res.status(400).json( { message: "User ID missing in the request"} );
+                res.json( { message: "User ID missing in the request"} );
                 return;
             }
     
             if(!tid){
-                res.status(400).json( { message: "Tenant ID missing in the request" } );
+                res.json( { message: "Tenant ID missing in the request" } );
                 return;
             }
     
             if(filesToMove.length == 0){
-                res.status(400).json( { message: "File IDs to be move missing in the request" } );
+                res.json( { message: "File IDs to be move missing in the request" } );
                 return;
             }
     
             if(!destinationFolderID){
-                res.status(400).json( { message: "Destination Folder ID missing in the request"} );
+                res.json( { message: "Destination Folder ID missing in the request"} );
                 return;
             }
     
             if(destinationFolderID){
                 let filesInFolder = await FileModel.getFilesCountInFolder(tid, uid, destinationFolderID);
                 if(filesInFolder >= 1){
-                    res.json( { messge: "One folder must contain only one file max" } );
+                    res.json( { message: "One folder must contain only one file max" } );
                     return;
                 }
             }
@@ -201,6 +201,57 @@ class fileInfo{
             res.json(err.stack)
         }
     }
+
+    async createFolder(req, res){
+        try{
+          let { tid, uid, foldername } = req.headers;
+  
+          if(!uid){
+              res.json( { message: "User ID missing in the request"} );
+              return;
+          }
+  
+          if(!tid){
+              res.json( { message: "Tenant ID missing in the request"} );
+              return;
+          }
+
+          if(!foldername){
+            res.json( { message: "Folder name missing in the request" } );
+            return;
+         }
+  
+          let userInfo = await UserModel.getUserDetails(uid);
+          let ownerInfo = {};
+          ownerInfo.UID = uid;
+          ownerInfo.FName = userInfo.FName;
+          ownerInfo.LName = userInfo.LName;
+          let responseObj = {
+              Folders: [],
+              Files: []
+          };
+  
+          if(foldername) {
+              let folderExist = await FolderModel.checkFolderExistOrNot(foldername, uid);
+              if(folderExist){
+                  res.json( { message: "Folder already exist" } );
+                  return;
+              }
+              let folderObject = {
+                  Name: foldername,
+                  TID: tid,
+                  Owner: ownerInfo,
+                  Status: 'A'
+              };
+  
+              let createFolder = await FolderModel.insertFolderRecord(folderObject);
+              responseObj.Folders.push(createFolder.Name)
+          }
+          res.json(responseObj);
+        }catch(err){
+          res.status(500).json({ error: err.stack });
+        }
+      }
 }
 
 const FileInfo = new fileInfo();
@@ -210,5 +261,6 @@ module.exports = {
     userData: FileInfo.userData.bind(FileInfo),
     viewFolder: FileInfo.viewFolder.bind(FileInfo),
     moveFilesFromOneFolderToOther: FileInfo.moveFilesFromOneFolderToOther.bind(FileInfo),
+    createFolder: FileInfo.createFolder.bind(FileInfo),
 
 }

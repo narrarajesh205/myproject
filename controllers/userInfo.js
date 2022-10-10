@@ -1,6 +1,8 @@
 const UserModel = require("../models/User/UserModel");
 const TenantModel = require("../models/Tenant/TenantModel");
 const bcrypt = require('bcryptjs');
+var jwt = require("jsonwebtoken");
+const config = require('../config');
 
 
 
@@ -36,7 +38,7 @@ class userInfo{
         res.json( { messge: "User already exists" } );
         return;
       }
-      req.body.Pwd = encodeURIComponent(req.body.Pwd);
+      req.body.Pwd = bcrypt.hashSync(Pwd, 8);
       let createTenant = 1;
       if(req.body.TID != undefined) createTenant = 0;
 
@@ -84,9 +86,21 @@ class userInfo{
       }
 
       var existedUser = await UserModel.checkUserExistsByEmail(email);
-      let pwd = await bcrypt.compare(password,existedUser.Pwd);
+      
+      var pwd = bcrypt.compareSync(
+        password,
+        existedUser.Pwd
+      );
+
       if(pwd){
-        res.json({Status: "Signin Successfull"});
+        var token = jwt.sign({ id: email }, config.secret, {
+          expiresIn: 86400 // 24 hours
+        });
+        res.json({
+          email: email,
+          accessToken: token,
+          Status: "Signin Successfull"
+        });
         return;
       } else{
         res.json({Status: "Signin Failed"});

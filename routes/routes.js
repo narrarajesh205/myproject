@@ -5,11 +5,13 @@ const UserInfo = require('../controllers/userInfo');
 const multer = require('multer');
 const upload = multer();
 
-router.post('/upload', upload.array("file", 10), FileInfo.upload);
+const { validateToken } = require('../middlewares/authJwt');
 
-router.get('/userdata', FileInfo.userData);
-router.get('/folderview', FileInfo.viewFolder);
-router.post('/movefiles', FileInfo.moveFilesFromOneFolderToOther);
+router.post('/upload', validateToken, upload.array("file", 10), FileInfo.upload);
+router.get('/userdata', validateToken, FileInfo.userData);
+router.get('/folderview', validateToken, FileInfo.viewFolder);
+router.post('/foldercreate', validateToken, FileInfo.createFolder);
+router.post('/movefiles', validateToken, FileInfo.moveFilesFromOneFolderToOther);
 
 router.post('/signup', UserInfo.signup);
 router.post('/signin', UserInfo.signin);

@@ -5,7 +5,7 @@ var tenantModelSchema = Schema(tenantSchema);
 
 tenantModelSchema.virtual('TID').get(function (){
     let TID;
-    if(this._id) UID = this._id;
+    if(this._id) TID = this._id;
     return TID;
 });
 

@@ -12,29 +12,6 @@ userModelSchema.virtual('UID').get(function (){
 });
 
 
-userModelSchema.pre('save', function (next) {
-  let user = this;
-  if (user.Pwd != '' && user.Pwd != null && user.Pwd != undefined) {
-    if (this.isModified('Pwd') || this.isNew) {
-      bcrypt.genSalt(10, (err, salt) => {
-        if (err) {
-          return next(err);
-        }
-
-        bcrypt.hash(user.Pwd, salt, (err, hash) => {
-          if (err) {
-            return next(err);
-          }
-
-          user.Pwd = hash;
-          next();
-        });
-      });
-    } else {
-      next();
-    }
-  } else next();
-});
 
 userModelSchema.statics.checkUserExistsByEmail = async function(Email){
     return await this.findOne({ Email: { $regex: new RegExp('^' + Email + '$', 'i')}});
